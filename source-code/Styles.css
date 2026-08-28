@@ -1,0 +1,59 @@
+/* Custom styles and adaptive loop track CSS */
+
+.adaptive-loop-track {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.adaptive-loop-step {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: hsl(197 18% 45%);
+  white-space: nowrap;
+}
+
+.adaptive-loop-step.is-current {
+  color: hsl(172 47% 22%);
+  font-weight: 700;
+}
+
+.adaptive-loop-step.is-complete {
+  color: hsl(162 46% 27%);
+}
+
+.adaptive-loop-dot {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  background: hsl(172 25% 90%);
+  color: hsl(197 18% 45%);
+}
+
+.adaptive-loop-step.is-current .adaptive-loop-dot {
+  background: hsl(13 70% 55%);
+  color: #fff;
+}
+
+.adaptive-loop-step.is-complete .adaptive-loop-dot {
+  background: hsl(172 47% 22%);
+  color: #fff;
+}
+
+.adaptive-loop-connector {
+  width: 0.75rem;
+  height: 1px;
+  background: hsl(172 20% 85%);
+  margin: 0 0.1rem;
+}
+
+.paper-noise {
+  background-color: hsl(172 25% 97%);
+}
