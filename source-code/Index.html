@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PathPilot — MoSPI Adaptive Learning & Competency Engine</title>
+    <meta name="description" content="AI-driven personalized adaptive learning and official statistical system competency platform for MoSPI (SIH26101)." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              border: 'hsl(172 20% 88%)', input: 'hsl(172 20% 88%)', ring: 'hsl(172 47% 22%)', background: 'hsl(172 25% 97%)', foreground: 'hsl(197 35% 15%)',
+              primary: { DEFAULT: 'hsl(172 47% 22%)', foreground: 'hsl(172 30% 98%)' },
+              secondary: { DEFAULT: 'hsl(172 25% 92%)', foreground: 'hsl(197 35% 15%)' },
+              accent: { DEFAULT: 'hsl(13 70% 55%)', foreground: 'hsl(0 0% 100%)' },
+              card: { DEFAULT: 'hsl(0 0% 100%)', foreground: 'hsl(197 35% 15%)' },
+              sidebar: { DEFAULT: 'hsl(197 33% 16%)', foreground: 'hsl(172 25% 96%)', primary: 'hsl(42 72% 66%)', 'primary-foreground': 'hsl(197 33% 16%)', accent: 'hsl(197 30% 22%)', border: 'hsl(197 25% 24%)' },
+              muted: { DEFAULT: 'hsl(172 15% 90%)', foreground: 'hsl(197 18% 40%)' },
+            },
+            fontFamily: { sans: ['Inter', 'sans-serif'], serif: ['Playfair Display', 'serif'], mono: ['JetBrains Mono', 'monospace'] },
+          },
+        },
+      };
+    </script>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+    <div id="root"></div>
+    <script type="module" src="/main.tsx"></script>
+  </body>
+</html>
