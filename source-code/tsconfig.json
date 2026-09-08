@@ -16,5 +16,14 @@
     "noUnusedParameters": false,
     "noImplicitReturns": false
   },
-  "include": ["src", "lib", "components", "pages", "App.tsx", "main.tsx"]
+  "include": [
+    "*.ts",
+    "*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    "pages/**/*.ts",
+    "pages/**/*.tsx",
+    "lib/**/*.ts",
+    "lib/**/*.tsx"
+  ]
 }
