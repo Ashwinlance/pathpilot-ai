@@ -1,7 +1,9 @@
 import { BrainCircuit, Check, Sparkles, Gauge, HelpCircle, RotateCcw, CheckCircle2, Route as RouteIcon } from 'lucide-react';
+
 function cx(...classes: (string | false | undefined)[]) {
   return classes.filter(Boolean).join(' ');
 }
+
 export const loopSteps = [
   { label: 'Diagnostic', icon: BrainCircuit },
   { label: 'Personalization', icon: Sparkles },
@@ -11,6 +13,7 @@ export const loopSteps = [
   { label: 'Mastery Verification', icon: CheckCircle2 },
   { label: 'Adaptive Roadmap', icon: RouteIcon },
 ] as const;
+
 export function loopStepForPath(path: string) {
   if (path === '/diagnostic') return 0;
   if (path === '/learning' || path === '/class' || path === '/notes') return 1;
@@ -20,6 +23,7 @@ export function loopStepForPath(path: string) {
   if (path === '/verification' || path === '/return') return 5;
   return 6;
 }
+
 export function AdaptiveLoop({ current = 6, compact = false }: { current?: number; compact?: boolean }) {
   return (
     <div className={cx('adaptive-loop rounded-2xl border border-border bg-card', compact ? 'p-3' : 'p-4 sm:p-5')} data-testid="adaptive-loop">

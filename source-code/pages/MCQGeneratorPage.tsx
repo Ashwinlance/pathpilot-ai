@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Sparkles, RefreshCw, ArrowRight } from 'lucide-react';
+import { Sparkles, CheckCircle2, RefreshCw, ArrowRight, HelpCircle, AlertCircle } from 'lucide-react';
 import { MCQCard } from '../components/MCQCard';
 import { mcqGenerator, type ExtractedMaterial, type GeneratedMCQ, SAMPLE_MATERIALS } from '../lib/mcqGenerator';
 
@@ -63,6 +63,7 @@ export function MCQGeneratorPage({
             Generated from <strong className="text-foreground">{activeMaterial.title}</strong>. Review, edit, or regenerate questions before publishing the quiz.
           </p>
         </div>
+
         <button
           onClick={handlePublish}
           disabled={questions.length === 0}
@@ -106,6 +107,7 @@ export function MCQGeneratorPage({
             <h2 className="font-serif text-2xl font-bold">Review & Edit Suite</h2>
             <span className="text-xs text-muted-foreground">Click options to edit question parameters</span>
           </div>
+
           <div className="space-y-5">
             {questions.map((q, idx) => (
               <MCQCard

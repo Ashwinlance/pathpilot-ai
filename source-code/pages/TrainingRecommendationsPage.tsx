@@ -19,10 +19,9 @@ export function TrainingRecommendationsPage({
   go: (path: string) => void;
 }) {
   const [filter, setFilter] = useState<string>('all');
-  const roleId = targetRole || 'stat_analyst';
-  const roleOverview = calculateSkillGaps(roleId, demonstratedCompetencies);
-  const recommendations = getTrainingRecommendations(roleId, demonstratedCompetencies, filter);
-  const role = getRoleById(roleId);
+
+  const roleOverview = calculateSkillGaps(targetRole || 'stat_analyst', demonstratedCompetencies);
+  const recommendations = getTrainingRecommendations(targetRole || 'stat_analyst', demonstratedCompetencies, filter);
 
   const filterTabs = [
     { id: 'all', label: 'All Courses' },
@@ -37,6 +36,7 @@ export function TrainingRecommendationsPage({
 
   return (
     <div className="mx-auto max-w-6xl space-y-8" data-testid="page-training-recommendations">
+      {/* Header Banner */}
       <div className="flex flex-col justify-between gap-5 rounded-[1.8rem] border border-border bg-card p-6 shadow-sm sm:p-8 md:flex-row md:items-center">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
@@ -47,101 +47,74 @@ export function TrainingRecommendationsPage({
             Personalized Training Recommendations
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Courses matched dynamically to address your high-priority competency gaps for target role <strong className="text-foreground">{role?.title ?? roleOverview.role.title}</strong>.
+            Courses matched dynamically to address your high-priority competency gaps for target role <strong className="text-foreground">{roleOverview.role.title}</strong>.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => go('/competency')}
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
-        >
-          <ArrowRight size={16} />
-          View Competency Profile
-        </button>
-      </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-            <Award size={17} />
-            Competency Gaps
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{roleOverview.gaps.length}</div>
-          <p className="mt-1 text-xs text-muted-foreground">Identified for your target role</p>
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-            <Sparkles size={17} />
-            Recommended Courses
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">{recommendations.length}</div>
-          <p className="mt-1 text-xs text-muted-foreground">Matched to your competency profile</p>
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-            <AlertCircle size={17} />
-            High Priority
-          </div>
-          <div className="mt-2 text-3xl font-bold text-foreground">
-            {roleOverview.gaps.filter((gap) => gap.priority === 'High').length}
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">Gaps needing immediate attention</p>
+        <div className="shrink-0 rounded-2xl border border-border bg-secondary/50 p-4 text-xs font-semibold text-muted-foreground">
+          <span className="block text-[10px] font-bold uppercase tracking-wider text-primary">Target Role Baseline</span>
+          <span className="font-serif text-base font-bold text-foreground">{roleOverview.role.title}</span>
+          <p className="mt-1 text-[11px]">{roleOverview.overallCompetencyMatch}% Role Competency Match</p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-        <div className="mb-3 flex items-center gap-2 text-sm font-bold text-foreground">
-          <Filter size={16} />
-          Filter recommendations
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {filterTabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setFilter(tab.id)}
-              className={cx(
-                'rounded-full border px-3 py-2 text-xs font-semibold transition-colors',
-                filter === tab.id
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground',
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      {/* Demo Technical Honesty Notice */}
+      <div className="flex items-center gap-3 rounded-2xl border border-border bg-secondary/70 p-4 text-xs leading-5 text-muted-foreground">
+        <Info size={18} className="shrink-0 text-primary" />
+        <span>
+          <strong>Prototype Demo Repository:</strong> Course catalogs are modeled after official iGOT Karmayogi and NSSTA frameworks. The recommendation logic dynamically evaluates actual competency gap signals.
+        </span>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 className="font-serif text-2xl font-bold tracking-[-.02em] text-foreground">Recommended learning path</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Prioritized training mapped to the competency gaps identified for your role.</p>
+      {/* Top Priority Skill Gaps Summary Header */}
+      {roleOverview.topPriorityGaps.length > 0 && (
+        <div className="rounded-2xl border border-accent/20 bg-accent/5 p-5 space-y-3">
+          <div className="flex items-center gap-2 text-sm font-bold text-accent">
+            <AlertCircle size={18} />
+            <span>Addressing Your Top Priority Skill Gaps</span>
           </div>
-          <span className="hidden items-center gap-1 text-xs font-semibold text-muted-foreground sm:flex">
-            <Info size={14} />
-            {recommendations.length} result{recommendations.length === 1 ? '' : 's'}
-          </span>
-        </div>
-
-        {recommendations.length > 0 ? (
-          <div className="grid gap-4">
-            {recommendations.map((item) => (
-              <TrainingRecommendationCard
-                key={item.course.id}
-                item={item}
-                onStartLearning={() => go('/learning')}
-              />
+          <div className="flex flex-wrap gap-2">
+            {roleOverview.topPriorityGaps.map(gap => (
+              <span key={gap.competencyId} className="inline-flex items-center gap-1.5 rounded-xl border border-accent/30 bg-card px-3 py-1.5 text-xs font-semibold text-foreground">
+                <span className="font-bold text-accent">-{gap.gap}pt gap</span>
+                <span>{gap.competencyName} ({gap.priority} Priority)</span>
+              </span>
             ))}
           </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center">
-            <BookOpen className="mx-auto text-muted-foreground" size={28} />
-            <h3 className="mt-3 font-semibold text-foreground">No courses match this filter</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Try another category to see the available training recommendations.</p>
+        </div>
+      )}
+
+      {/* Filter Tabs & Recommendations Grid */}
+      <div className="space-y-6">
+        <div className="flex flex-col justify-between gap-4 border-b border-border pb-4 sm:flex-row sm:items-center">
+          <div>
+            <h2 className="font-serif text-2xl font-bold">Recommended Training Courses</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Ranked by relevance score, gap priority, and target role alignment.</p>
           </div>
-        )}
+
+          {/* Filter Bar */}
+          <div className="flex flex-wrap gap-1.5 rounded-xl border border-border bg-card p-1">
+            {filterTabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setFilter(tab.id)}
+                className={cx(
+                  'rounded-lg px-3 py-1.5 text-xs font-semibold transition',
+                  filter === tab.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Recommendations List */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          {recommendations.map(rec => (
+            <TrainingRecommendationCard key={rec.course.id} item={rec} onStartLearning={() => go('/roadmap')} />
+          ))}
+        </div>
       </div>
     </div>
   );

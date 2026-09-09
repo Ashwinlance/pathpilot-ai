@@ -27,10 +27,12 @@ import { getWorkforceAnalyticsSummary } from './lib/workforceAnalytics';
 import { SAMPLE_MATERIALS, type ExtractedMaterial, type GeneratedMCQ } from './lib/mcqGenerator';
 import type { AssessmentResult } from './lib/assessmentEngine';
 import { loadJudgeDemo, resetJudgeDemo, getJudgeDemoState, JUDGE_DEMO_PROFILE, JUDGE_DEMO_COMPETENCIES, JUDGE_DEMO_TOPICS } from './lib/sihDemoScenario';
+
 type Mode = 'beginner' | 'experienced';
 type UserRole = 'learner' | 'admin';
 type Status = 'mastered' | 'guided' | 'repair' | 'upcoming';
 type Topic = { id: number; title: string; blurb: string; mastery: number; status: Status; minutes: number };
+
 const topicsSeed = [
   ['Python Basics', 'Your first bearings: syntax, comments, and running a script.', 24],
   ['Variables & Data Types', 'Give information a useful shape and name.', 18],
@@ -41,7 +43,15 @@ const topicsSeed = [
   ['File Handling', 'Let your programs remember things.', 0],
   ['Mini Project', 'Bring the whole route together in a small tool.', 0],
 ] as const;
+
+const createTopics = (mode: Mode, experienced = false): Topic[] => topicsSeed.map(([title, blurb, beginnerMastery], id) => {
+  const mastery = mode === 'experienced'
+    ? [100, 96, 86, 82, 68, 51, 18, 0][id]
+    : experienced ? [83, 81, 62, 37, 0, 0, 0, 0][id] : beginnerMastery;
+  const status: Status = mastery >= 80 ? 'mastered' : mastery >= 50 ? 'guided' : mastery > 0 ? 'repair' : 'upcoming';
+  return { id, title, blurb, mastery, status, minutes: [18, 22, 26, 28, 32, 34, 30, 45][id] };
 });
+
 const readStore = <T,>(key: string, fallback: T): T => {
   try {
     const value = localStorage.getItem(key);
@@ -50,10 +60,13 @@ const readStore = <T,>(key: string, fallback: T): T => {
     return fallback;
   }
 };
+
 const saveStore = (key: string, value: unknown) => localStorage.setItem(key, JSON.stringify(value));
+
 function cx(...classes: (string | false | undefined)[]) {
   return classes.filter(Boolean).join(' ');
 }
+
 function Button({ children, onClick, variant = 'primary', className, disabled, testId = 'button-action', type = 'button' }: {
   children: ReactNode; onClick?: () => void; variant?: 'primary' | 'secondary' | 'quiet' | 'coral'; className?: string; disabled?: boolean; testId?: string; type?: 'button' | 'submit';
 }) {
@@ -66,7 +79,7 @@ function Button({ children, onClick, variant = 'primary', className, disabled, t
     className
   )}>{children}</button>;
 }
-  
+
 function TopBar({ mode, setMode, onExit, onFocus, focusMode, topics }: { mode: Mode; setMode: (mode: Mode) => void; onExit: () => void; onFocus?: () => void; focusMode?: boolean; topics: Topic[] }) {
   const current = topics.find(topic => topic.status !== 'mastered');
   return <header className="top-bar flex min-h-[72px] items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur sm:px-8">
@@ -122,7 +135,7 @@ function Shell({
   onSeedHandled: () => void;
   onRepairCopilot: () => void;
 }) {
-   const copilotEnabled = ['/roadmap', '/learning', '/practice', '/gap', '/competency', '/training', '/materials', '/mcq-generator', '/assessment', '/admin', '/progress'].includes(location);
+  const copilotEnabled = ['/roadmap', '/learning', '/practice', '/gap', '/competency', '/training', '/materials', '/mcq-generator', '/assessment', '/admin', '/progress'].includes(location);
   return (
     <div className={cx('min-h-[100dvh] bg-background', focusMode && 'focus-shell')}>
       <AppSidebar mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={onStartJudgeDemo} onResetJudgeDemo={onResetJudgeDemo} onExit={onExit} topics={topics} />
@@ -151,7 +164,15 @@ function Shell({
     </div>
   );
 }
-            <button
+
+// Landing Page
+function Landing({ go, mode, setMode, onStartJudgeDemo }: { go: (path: string) => void; mode: Mode; setMode: (mode: Mode) => void; onStartJudgeDemo: () => void }) {
+  return (
+    <div className="min-h-[100dvh] overflow-hidden bg-background">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-10">
+        <Logo />
+        <div className="flex items-center gap-2">
+          <button
             onClick={onStartJudgeDemo}
             data-testid="button-landing-sih-demo"
             className="rounded-xl bg-accent px-4 py-2 text-sm font-bold text-accent-foreground shadow-md transition hover:brightness-110"
@@ -214,11 +235,14 @@ function Shell({
             </div>
           </div>
         </section>
+        <section className="mt-20" aria-label="Adaptive learning loop">
+          <AdaptiveLoop current={0} />
         </section>
       </main>
     </div>
   );
 }
+
 // Course Selection Page
 function CourseSelection({ go }: { go: (path: string) => void }) {
   return (
@@ -247,6 +271,10 @@ function CourseSelection({ go }: { go: (path: string) => void }) {
     </div>
   );
 }
+
+// Diagnostic Page
+function DiagnosticPage({ mode, setProgress, go }: { mode: Mode; setProgress: (topics: Topic[]) => void; go: (path: string) => void }) {
+  const questions = [
     ['What does `len("route")` return?', ['4', '5', '6'], 1],
     ['Which value is a Boolean?', ['"True"', 'True', '1'], 1],
     ['What prints first?', ['print("start")', 'print("finish")', 'Nothing'], 0],
@@ -255,6 +283,7 @@ function CourseSelection({ go }: { go: (path: string) => void }) {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [notice, setNotice] = useState('');
   const score = Math.round((questions.reduce((sum, q, i) => sum + (answers[i] === q[2] ? 1 : 0), 0) / questions.length) * 100);
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
@@ -305,6 +334,23 @@ function CourseSelection({ go }: { go: (path: string) => void }) {
     </div>
   );
 }
+
+// Roadmap Page
+function RoadmapPage({ topics, mode, go, updated }: { topics: Topic[]; mode: Mode; go: (path: string) => void; updated: boolean }) {
+  const next = topics.find(t => t.status !== 'mastered');
+  const average = Math.round(topics.reduce((a, t) => a + t.mastery, 0) / topics.length);
+  const mastered = topics.filter(t => t.status === 'mastered').length;
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-[.18em] text-primary">{updated ? 'Route recalculated' : 'Your adaptive roadmap'}</p>
+        <h1 className="font-serif text-4xl font-bold tracking-[-.045em]">{updated ? 'The next landmark is clearer now.' : 'A route built around your signal.'}</h1>
+      </div>
+      <div className="grid gap-5 lg:grid-cols-[1.18fr_.82fr]">
+        <div className="rounded-[1.5rem] border border-border bg-card p-5 sm:p-7 space-y-3">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-serif text-xl font-bold">Ordered Landmarks</h3>
             <span className="font-mono text-xs text-muted-foreground">{mastered}/{topics.length} complete</span>
           </div>
           {topics.map((topic, i) => (
@@ -336,6 +382,25 @@ function CourseSelection({ go }: { go: (path: string) => void }) {
     </div>
   );
 }
+
+// Dashboard
+function Dashboard({ topics, profile, mode, go }: { topics: Topic[]; profile: ProfileData; mode: Mode; go: (path: string) => void }) {
+  const next = topics.find(t => t.status !== 'mastered') ?? topics[topics.length - 1];
+  const overallSignal = Math.round(topics.reduce((sum, t) => sum + t.mastery, 0) / topics.length);
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-[.18em] text-primary">Good to see you back</p>
+        <h1 className="font-serif text-4xl font-bold tracking-[-.045em]">
+          Keep finding your way{profile.name ? `, ${profile.name}` : ''}.
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          MoSPI Role: <strong className="text-foreground">{profile.designation || 'Senior Statistical Officer'}</strong> ({profile.department || 'National Accounts Division'})
+        </p>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
         <div className="rounded-[1.6rem] bg-sidebar p-6 text-sidebar-foreground shadow-md sm:p-8 space-y-6">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.16em] text-sidebar-primary">Your Next Move</p>
@@ -346,6 +411,7 @@ function CourseSelection({ go }: { go: (path: string) => void }) {
             Continue <ArrowRight size={15} />
           </Button>
         </div>
+
         <div className="rounded-[1.6rem] border border-border bg-card p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -370,6 +436,8 @@ function CourseSelection({ go }: { go: (path: string) => void }) {
     </div>
   );
 }
+
+// Learning Landmark Lesson Page
 function LearningPage({ topic, go, onOpenCopilot }: { topic: Topic; go: (path: string) => void; onOpenCopilot: (prompt?: string) => void }) {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -378,6 +446,7 @@ function LearningPage({ topic, go, onOpenCopilot }: { topic: Topic; go: (path: s
         <h1 className="font-serif text-4xl font-bold">{topic.title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{topic.blurb}</p>
       </div>
+
       <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
         <h3 className="font-serif text-lg font-bold">Key Concept Breakdown</h3>
         <p className="text-sm leading-6 text-muted-foreground">
@@ -398,8 +467,29 @@ function LearningPage({ topic, go, onOpenCopilot }: { topic: Topic; go: (path: s
     </div>
   );
 }
+
+// Practice Page
+function PracticePage({ topic, go, setTopics }: { topic: Topic; go: (path: string) => void; setTopics: React.Dispatch<React.SetStateAction<Topic[]>> }) {
+  const [selected, setSelected] = useState<number | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+
+  const options = ['Syntax error', 'Valid execution storing key-value pairs', 'Unexpected type conversion'];
+  const correct = 1;
+
+  const handleSubmit = () => {
+    setSubmitted(true);
+    if (selected === correct) {
+      setTopics(current => current.map(t => t.id === topic.id ? { ...t, mastery: Math.min(100, t.mastery + 35), status: 'mastered' } : t));
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-[.18em] text-primary">Practice Challenge</p>
         <h1 className="font-serif text-3xl font-bold">{topic.title} Evaluation</h1>
       </div>
+
       <div className="rounded-2xl border border-border bg-card p-6 space-y-5">
         <p className="text-sm font-semibold">Which statement accurately describes how dictionaries store statistical survey variables in Python?</p>
         <div className="space-y-2">
@@ -413,6 +503,7 @@ function LearningPage({ topic, go, onOpenCopilot }: { topic: Topic; go: (path: s
             </button>
           ))}
         </div>
+
         {!submitted ? (
           <Button onClick={handleSubmit} disabled={selected === null} variant="primary" className="w-full">
             Submit Answer
@@ -431,6 +522,7 @@ function LearningPage({ topic, go, onOpenCopilot }: { topic: Topic; go: (path: s
     </div>
   );
 }
+
 // Simulated Live Class Page
 function LiveClassSim({ go }: { go: (path: string) => void }) {
   return (
@@ -478,13 +570,55 @@ function ClassNotes({ go }: { go: (path: string) => void }) {
     </div>
   );
 }
+
+// Main App Component
+export default function App() {
+  const [location, setLocation] = useLocation();
+
+  const [mode, setMode] = useState<Mode>('beginner');
+
+  // Single Source of Truth Learner State with fallback to Judge Demo State
+  const initialDemoState = getJudgeDemoState();
+  const [userRole, setUserRole] = useState<UserRole>(() => initialDemoState.userRole);
+  const [topics, setTopics] = useState<Topic[]>(() => initialDemoState.topics);
+  const [profile, setProfile] = useState<ProfileData>(() => initialDemoState.profile);
+  const [demonstratedCompetencies, setDemonstratedCompetencies] = useState<Record<string, number>>(() => initialDemoState.competencies);
+
+  const [activeMaterial, setActiveMaterial] = useState<ExtractedMaterial>(SAMPLE_MATERIALS[0]);
+  const [publishedQuestions, setPublishedQuestions] = useState<GeneratedMCQ[]>([]);
+  const [lastAssessmentResult, setLastAssessmentResult] = useState<AssessmentResult | null>(null);
+
+  const [copilotOpen, setCopilotOpen] = useState(false);
+  const [copilotSeed, setCopilotSeed] = useState<{ id: number; prompt: string } | null>(null);
+
+  useEffect(() => {
+    saveStore('pp-topics', topics);
+  }, [topics]);
+
+  useEffect(() => {
+    saveStore('pp-profile', profile);
+  }, [profile]);
+
+  useEffect(() => {
+    saveStore('pp-competencies', demonstratedCompetencies);
+  }, [demonstratedCompetencies]);
+
+  useEffect(() => {
+    saveStore('pp-user-role', userRole);
+  }, [userRole]);
+
+  const currentTopic = topics.find(t => t.status !== 'mastered') ?? topics[0];
+
+  // Sync Python landmark average to tech_python demonstrated level
   useEffect(() => {
     const pythonMasteryAverage = Math.round(topics.reduce((s, t) => s + t.mastery, 0) / topics.length);
     setDemonstratedCompetencies(prev => ({ ...prev, tech_python: pythonMasteryAverage }));
   }, [topics]);
+
   const skillGapOverview = calculateSkillGaps(profile.targetRole || 'stat_analyst', demonstratedCompetencies);
   const recommendations = getTrainingRecommendations(profile.targetRole || 'stat_analyst', demonstratedCompetencies);
   const workforceSummary = getWorkforceAnalyticsSummary();
+
   const copilotContext: LearningCopilotContext = {
     currentTopic: currentTopic.title,
     learnerLevel: mode === 'beginner' ? 'Beginner' : 'Experienced',
@@ -501,55 +635,153 @@ function ClassNotes({ go }: { go: (path: string) => void }) {
     uploadedMaterialTitle: activeMaterial.title,
     workforceTopGap: workforceSummary.topOrgSkillGaps[0] ? { competency: workforceSummary.topOrgSkillGaps[0].competencyName, gap: workforceSummary.topOrgSkillGaps[0].gap, affected: workforceSummary.topOrgSkillGaps[0].affectedLearnersCount } : undefined,
   };
+
   const handleOpenCopilot = (prompt?: string) => {
     if (prompt) {
       setCopilotSeed({ id: Date.now(), prompt });
     }
     setCopilotOpen(true);
   };
+
   const handleCompleteAssessment = (result: AssessmentResult) => {
     setLastAssessmentResult(result);
-        setUserRole('learner');
+    // Directly update central demonstratedCompetencies state
+    setDemonstratedCompetencies(result.updatedDemonstratedCompetencies);
+
+    if (result.scorePercentage < 50) {
+      setTopics(current => current.map((t, idx) => idx === 3 ? { ...t, status: 'repair', mastery: 15 } : t));
+    }
+  };
+
+  const handleStartJudgeDemo = () => {
+    const demoState = loadJudgeDemo();
+    setProfile(demoState.profile);
+    setDemonstratedCompetencies(demoState.competencies);
+    setTopics(demoState.topics);
+    setUserRole('learner');
     setLocation('/competency');
   };
+
+  const handleResetJudgeDemo = () => {
+    const defaultState = resetJudgeDemo();
+    setProfile(defaultState.profile);
+    setDemonstratedCompetencies(defaultState.competencies);
+    setTopics(defaultState.topics);
+    setUserRole('learner');
+    setLocation('/competency');
+  };
+
   const go = (path: string) => setLocation(path);
+
   return (
     <WouterRouter>
       <Switch>
         <Route path="/">
           <Landing go={go} mode={mode} setMode={setMode} onStartJudgeDemo={handleStartJudgeDemo} />
         </Route>
+
         <Route path="/admin">
           <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
             <AdminDashboard go={go} />
           </Shell>
         </Route>
+
         <Route path="/courses">
           <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
             <CourseSelection go={go} />
           </Shell>
         </Route>
-        
+
+        <Route path="/profile">
+          <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
+            <ProfilePage profile={profile} setProfile={setProfile} go={go} />
+          </Shell>
+        </Route>
+
+        <Route path="/competency">
+          <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
+            <CompetencyProfilePage profile={profile} setProfile={setProfile} demonstratedCompetencies={demonstratedCompetencies} go={go} />
+          </Shell>
+        </Route>
+
+        <Route path="/training">
+          <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
+            <TrainingRecommendationsPage targetRole={profile.targetRole || 'stat_analyst'} demonstratedCompetencies={demonstratedCompetencies} go={go} />
+          </Shell>
+        </Route>
+
+        <Route path="/materials">
+          <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
+            <MaterialUploadPage onMaterialSelected={setActiveMaterial} go={go} />
+          </Shell>
+        </Route>
+
+        <Route path="/mcq-generator">
+          <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
+            <MCQGeneratorPage material={activeMaterial} onPublishQuestions={setPublishedQuestions} go={go} />
+          </Shell>
+        </Route>
+
+        <Route path="/assessment">
+          <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
+            <AssessmentPage questions={publishedQuestions} demonstratedCompetencies={demonstratedCompetencies} onCompleteAssessment={handleCompleteAssessment} go={go} />
+          </Shell>
+        </Route>
+
+        <Route path="/diagnostic">
+          <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
+            <DiagnosticPage mode={mode} setProgress={setTopics} go={go} />
+          </Shell>
+        </Route>
+
+        <Route path="/roadmap">
+          <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
+            <RoadmapPage topics={topics} mode={mode} go={go} updated={false} />
+          </Shell>
+        </Route>
+
+        <Route path="/dashboard">
+          <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
+            <Dashboard topics={topics} profile={profile} mode={mode} go={go} />
+          </Shell>
+        </Route>
+
+        <Route path="/learning">
+          <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
+            <LearningPage topic={currentTopic} go={go} onOpenCopilot={handleOpenCopilot} />
+          </Shell>
+        </Route>
+
+        <Route path="/practice">
+          <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
+            <PracticePage topic={currentTopic} go={go} setTopics={setTopics} />
+          </Shell>
+        </Route>
+
         <Route path="/progress">
           <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
             <ProgressPage profile={profile} demonstratedCompetencies={demonstratedCompetencies} topics={topics} go={go} />
           </Shell>
         </Route>
+
         <Route path="/settings">
           <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
             <SettingsPage onResetDemo={handleResetJudgeDemo} go={go} />
           </Shell>
         </Route>
+
         <Route path="/class">
           <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
             <LiveClassSim go={go} />
           </Shell>
         </Route>
+
         <Route path="/notes">
           <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
             <ClassNotes go={go} />
           </Shell>
         </Route>
+
         <Route>
           <Shell mode={mode} setMode={setMode} userRole={userRole} setUserRole={setUserRole} onStartJudgeDemo={handleStartJudgeDemo} onResetJudgeDemo={handleResetJudgeDemo} onExit={() => go('/')} topics={topics} location={location} copilotContext={copilotContext} copilotOpen={copilotOpen} copilotSeed={copilotSeed} onOpenCopilot={handleOpenCopilot} onCloseCopilot={() => setCopilotOpen(false)} onSeedHandled={() => setCopilotSeed(null)} onRepairCopilot={() => go('/repair')}>
             <Dashboard topics={topics} profile={profile} mode={mode} go={go} />

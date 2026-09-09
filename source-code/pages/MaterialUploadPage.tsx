@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, ArrowRight, Info } from 'lucide-react';
+import { FileText, Sparkles, ArrowRight, BookOpen, Info } from 'lucide-react';
 import { MaterialUploader } from '../components/MaterialUploader';
 import { SAMPLE_MATERIALS, type ExtractedMaterial } from '../lib/mcqGenerator';
 
@@ -33,6 +33,7 @@ export function MaterialUploadPage({
             Ingest official statistical handbooks, survey guidelines, or training decks (PDF, PPT, DOC, TXT) to automatically extract concepts and generate competency-aware MCQs.
           </p>
         </div>
+
         <button
           onClick={handleGenerate}
           data-testid="button-generate-mcqs"
