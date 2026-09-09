@@ -438,7 +438,53 @@ function Dashboard({ topics, profile, mode, go }: { topics: Topic[]; profile: Pr
 }
 
 // Learning Landmark Lesson Page
+function getTopicBreakdown(title: string) {
+  const lower = title.toLowerCase();
+  if (lower.includes('dict') || lower.includes('list')) {
+    return {
+      explanation: 'Python dictionaries allow storing structured statistical survey records as key-value pairs. Values can be efficiently retrieved, updated, or analyzed using unique keys.',
+      code: `survey_record = {\n    "age": 32,\n    "employment_status": "employed"\n}\n\nprint(survey_record["age"])`,
+    };
+  }
+  if (lower.includes('variable') || lower.includes('data type')) {
+    return {
+      explanation: 'Variables store survey data values in memory. Python assigns data types such as integers, floats, strings, and booleans based on assigned values.',
+      code: `survey_id = 1042\nsample_weight = 1.45\nis_verified = True\n\nprint("Survey ID:", survey_id)`,
+    };
+  }
+  if (lower.includes('condition')) {
+    return {
+      explanation: 'Conditional statements (if/elif/else) allow automated survey data validation and filtering based on logical evaluation rules.',
+      code: `monthly_income = 45000\nif monthly_income > 40000:\n    category = "High"\nelse:\n    category = "Standard"`,
+    };
+  }
+  if (lower.includes('loop')) {
+    return {
+      explanation: 'Loops (for/while) iterate over lists of survey observations to clean, aggregate, or recalculate values without repeating code.',
+      code: `sample_ages = [24, 30, 28, 35]\nfor age in sample_ages:\n    print("Respondent age:", age)`,
+    };
+  }
+  if (lower.includes('function')) {
+    return {
+      explanation: 'Functions encapsulate reusable statistical logic, taking inputs and returning computed indicators or summary figures.',
+      code: `def calc_growth(current, previous):\n    return ((current - previous) / previous) * 100\n\nprint("GDP Growth:", calc_growth(105, 100))`,
+    };
+  }
+  if (lower.includes('file')) {
+    return {
+      explanation: 'File handling reads and writes external survey datasets (such as CSV files), persisting data across analytical sessions.',
+      code: `import csv\nwith open("survey.csv", "r") as f:\n    reader = csv.reader(f)\n    for row in reader:\n        print(row)`,
+    };
+  }
+  return {
+    explanation: `In Python for official statistics, ${title.toLowerCase()} provides the core logic to manipulate and process survey data schedules.`,
+    code: `# Python Code Example for ${title}\ndata_points = [12.5, 14.8, 19.2]\nprint("Sum:", sum(data_points))`,
+  };
+}
+
 function LearningPage({ topic, go, onOpenCopilot }: { topic: Topic; go: (path: string) => void; onOpenCopilot: (prompt?: string) => void }) {
+  const breakdown = getTopicBreakdown(topic.title);
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
@@ -450,10 +496,10 @@ function LearningPage({ topic, go, onOpenCopilot }: { topic: Topic; go: (path: s
       <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
         <h3 className="font-serif text-lg font-bold">Key Concept Breakdown</h3>
         <p className="text-sm leading-6 text-muted-foreground">
-          In Python for official statistics, {topic.title.toLowerCase()} provides the core logic to manipulate and process survey data schedules.
+          {breakdown.explanation}
         </p>
-        <div className="rounded-xl bg-secondary p-4 font-mono text-xs">
-          <code># Python Code Example for {topic.title}<br />data_points = [12.5, 14.8, 19.2]<br />print("Sum:", sum(data_points))</code>
+        <div className="rounded-xl bg-secondary p-4 font-mono text-xs whitespace-pre">
+          <code>{breakdown.code}</code>
         </div>
         <div className="flex flex-wrap gap-3 pt-3">
           <Button onClick={() => go('/practice')} variant="primary">

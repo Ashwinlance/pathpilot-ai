@@ -1,13 +1,17 @@
 const fs = require('fs');
 const path = require('path');
+
 const distDir = path.join(__dirname, 'dist');
 const html = fs.readFileSync(path.join(distDir, 'index.html'), 'utf8');
+
 console.log('--- HTML CHECK ---');
 console.log('HTML Length:', html.length);
 console.log('Root element exists:', html.includes('id="root"'));
+
 const assetsDir = path.join(distDir, 'assets');
 const files = fs.readdirSync(assetsDir);
 console.log('Asset files:', files);
+
 const jsFile = files.find(f => f.endsWith('.js'));
 if (jsFile) {
   const jsContent = fs.readFileSync(path.join(assetsDir, jsFile), 'utf8');

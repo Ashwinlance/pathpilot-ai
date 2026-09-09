@@ -73,6 +73,55 @@ export async function getLearningCopilotReply({
   }
 
   // Learner Mode Responses
+  if (action === 'explain' || lower.includes('explain')) {
+    if (lower.includes('python basics') || context.currentTopic.toLowerCase().includes('python basics')) {
+      return {
+        message: `Python Basics means understanding core building blocks such as variables, data types, conditions, loops, functions, lists and dictionaries. In official statistics, these fundamentals help you clean, transform and analyze survey data programmatically.`,
+        actions: ['example', 'practice', 'next'],
+      };
+    }
+
+    if (lower.includes('dictionary') || lower.includes('dictionaries') || context.currentTopic.toLowerCase().includes('dictionary')) {
+      return {
+        message: `In Python, a dictionary stores data as key-value pairs where each value is accessed using its unique key. For example, a survey record can map 'age': 32 and 'employment_status': 'employed'. Dictionaries allow fast lookup of structured statistical records.`,
+        actions: ['example', 'practice', 'next'],
+      };
+    }
+
+    if (lower.includes('sql') || context.currentTopic.toLowerCase().includes('sql')) {
+      return {
+        message: `SQL (Structured Query Language) is used to query, aggregate, and audit relational databases. In statistical operations, SQL allows filtering microdata using WHERE clauses, grouping survey samples with GROUP BY, and computing statistical totals.`,
+        actions: ['example', 'practice', 'next'],
+      };
+    }
+
+    return {
+      message: `Understanding ${context.currentTopic} involves mastering its fundamental syntax and logic. In official statistics and data workflows, this concept allows programmatically structuring, processing, and analyzing survey data.`,
+      actions: ['example', 'practice', 'next'],
+    };
+  }
+
+  if (action === 'next' || lower.includes('next step') || lower.includes('next')) {
+    if (context.topicMastery < 50 || context.topicMastery === 24) {
+      return {
+        message: `Next step: complete the Python fundamentals assessment. Your current signal suggests strengthening Python basics before moving to advanced survey automation.`,
+        actions: ['explain', 'practice', 'next'],
+      };
+    }
+
+    if (context.latestAssessmentScore !== undefined) {
+      return {
+        message: `Next step: review your assessment score (${context.latestAssessmentScore}%) and navigate to Training Recommendations to select targeted iGOT / NSSTA modules for identified skill gaps.`,
+        actions: ['explain_gap', 'why_recommended', 'next'],
+      };
+    }
+
+    return {
+      message: `Next step: continue with the recommended training module for ${context.currentTopic} or proceed to the competency assessment to demonstrate your progress.`,
+      actions: ['explain', 'practice', 'next'],
+    };
+  }
+
   if (action === 'repair' || context.knowledgeGap) {
     return {
       message: `The adaptive engine identified a knowledge gap in ${context.prerequisiteTopic ?? context.knowledgeGap ?? 'a prerequisite'}. Grounding this prerequisite before advancing to ${context.currentTopic} will increase your overall concept confidence by up to 35%.`,
@@ -114,6 +163,12 @@ export async function getLearningCopilotReply({
   }
 
   if (action === 'hint' || lower.includes('hint')) {
+    if (lower.includes('dictionary') || context.currentTopic.toLowerCase().includes('dictionary')) {
+      return {
+        message: `Hint for Dictionaries: Focus on how key-value pairs are defined using curly braces {} and colon separators, and how values are indexed by key (e.g. record["age"]).`,
+        actions: ['explain', 'example', 'practice'],
+      };
+    }
     return {
       message: `Hint for ${context.currentTopic}: Focus on syntax structure and how data flows from variables into functions. Look closely at parameter definitions.`,
       actions: ['explain', 'example', 'practice'],
@@ -121,6 +176,12 @@ export async function getLearningCopilotReply({
   }
 
   if (action === 'example' || lower.includes('example')) {
+    if (lower.includes('dictionary') || context.currentTopic.toLowerCase().includes('dictionary')) {
+      return {
+        message: `Here is a Python Dictionary example for survey records:\n\`\`\`python\nsurvey_record = {\n    "age": 32,\n    "employment_status": "employed"\n}\n\nprint(survey_record["age"])\n\`\`\``,
+        actions: ['explain', 'practice', 'next'],
+      };
+    }
     return {
       message: `Here is a practical example in ${context.currentTopic}:\n\`\`\`python\n# Example of ${context.currentTopic}\ndef calculate_index(data):\n    return sum(data) / len(data)\n\nresult = calculate_index([10, 20, 30])\nprint("Index:", result)\n\`\`\``,
       actions: ['explain', 'practice', 'next'],
@@ -130,7 +191,7 @@ export async function getLearningCopilotReply({
   return {
     message: context.userRole === 'admin'
       ? `I'm PathPilot Workforce Intelligence Copilot. I can assist with organization-wide skill gaps, department analytics, and executive training priorities.`
-      : `I'm tracking your journey through ${context.course} for target role ${context.targetRole ?? 'Statistical Analyst'}. Your current signal is ${context.topicMastery}%. Ask for a simple explanation, a hint, an assessment mistake explanation, or skill gap details.`,
+      : `I'm tracking your journey through ${context.course} for target role ${context.targetRole ?? 'Statistical Analyst'}. Your current ${context.currentTopic || 'Python'} diagnostic signal is ${context.topicMastery}%. Ask for a simple explanation, a hint, an assessment mistake explanation, or skill gap details.`,
     actions: context.userRole === 'admin'
       ? ['admin_top_gap', 'admin_dept', 'admin_rec']
       : context.knowledgeGap ? ['explain', 'example', 'repair'] : ['explain', 'why_recommended', 'mistake', 'hint', 'example', 'practice', 'next'],
