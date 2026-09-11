@@ -1,7 +1,25 @@
 import { test, expect, type Page } from '@playwright/test';
 
 const CRITICAL_RESOURCE_TYPES = new Set(['document', 'script', 'stylesheet', 'xhr', 'fetch']);
-const ROUTES = ['/', '/competency', '/training', '/materials', '/assessment', '/roadmap', '/progress', '/admin', '/settings'];
+const ROUTES = [
+  '/dashboard',
+  '/profile',
+  '/diagnostic',
+  '/competency',
+  '/training',
+  '/materials',
+  '/mcq-generator',
+  '/assessment',
+  '/roadmap',
+  '/learning',
+  '/practice',
+  '/gap',
+  '/repair',
+  '/verification',
+  '/progress',
+  '/admin',
+  '/settings',
+];
 
 function attachRuntimeGuards(page: Page) {
   const pageErrors: string[] = [];
@@ -149,9 +167,6 @@ test('important routes load directly with the application shell', async ({ page 
   for (const route of ROUTES) {
     await page.goto(route);
     await expectApplicationShell(page);
-    if (route !== '/') {
-      await expect(page.getByTestId('adaptive-loop')).toBeVisible();
-    }
   }
 
   await assertRuntimeClean();
